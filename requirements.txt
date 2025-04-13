@@ -1,0 +1,8 @@
+pyautogui
+paho-mqtt
+keyboard
+python-xlib # Correct package name for Xlib
+Pillow
+requests
+ollama # Added for Ollama API interaction
+PyQt5 # Added for the GUI

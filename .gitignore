@@ -1,0 +1,41 @@
+# Operating System Files
+.DS_Store          # macOS
+Thumbs.db          # Windows
+
+# Editor/IDE Files
+.vscode/           # VS Code settings
+.idea/             # IntelliJ IDEA
+*.sublime-*        # Sublime Text
+*.swp              # Vim swap files
+
+# Environment Variables
+.env               # Environment variable files
+*.env.local
+*.env.*.local
+
+# Logs and Temporary Files
+*.log
+*.log.*
+temp/
+tmp/
+*.tmp
+
+# Sensitive Data
+secrets/
+credentials.json
+*.pem
+*.key
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Package distribution
+*.egg-info/
+dist/
+build/
