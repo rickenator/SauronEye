@@ -6,3 +6,5 @@ Pillow
 requests
 ollama # Added for Ollama API interaction
 PyQt5 # Added for the GUI
+evdev
+python-uinput

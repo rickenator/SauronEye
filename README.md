@@ -66,7 +66,7 @@ This Python-based application captures the currently focused window on your desk
     *   A full-screen output window will appear on the specified screen.
 
 3.  **Keypad Control:**
-    *   Ensure that the keypad listener script (`keypad_listener.py`) is running in the background (see below).
+    *   Ensure that the keypad listener script (`KeyboardListener.py`) is running in the background (see below).
     *   Use the following keys on the numeric keypad to control the application:
         *   `Enter`: Capture the focused window, send it to the LLM, and display the response in the output window.
         *   `4`, `6`, `8`, `2`, `Insert`, `Delete`, `Home`, `End`, `PageUp`, `PageDown` - (To be implemented)
@@ -87,10 +87,17 @@ SauronEye acts like an AI assistant "looking over your shoulder". It's designed 
 
 ## Workflow
 
-1.  **Prerequisites:** Ensure Python, required libraries (`pip install -r requirements.txt`), an MQTT broker (like Mosquitto), and Ollama (with a suitable multimodal model like `llava`) are installed and running. The `scrot` utility is also needed for `pyautogui` screenshots on Linux.
-2.  **Run Keyboard Listener:** The listener requires root privileges to capture global key presses. Open a terminal and run:
+1.  **Prerequisites:** Ensure Python, required libraries (`pip install -r requirements.txt`), an MQTT broker (like Mosquitto), and Ollama (with a suitable multimodal model like `llava`) are installed and running. 
+
+The `scrot` utility is also needed for `pyautogui` screenshots on Linux. 
+
+Linux libudev-dev installed.
+
+sudo apt install libudev-dev
+
+2.  **Run Keyboard Listener:** The listener requires root privileges to capture global key presses. It is also coded for a US Keyboard. Open a terminal and run:
     ```bash
-    sudo python KeyboardListener.py
+    sudo <path to>/SauronEye/.venv/bin/python KeyboardListener.py
     ```
     This script listens for specific keys on the numeric keypad in the background and sends commands via MQTT.
 3.  **Run Main Application:** Open another terminal and run the main GUI application:

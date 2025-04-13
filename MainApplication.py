@@ -20,8 +20,8 @@ from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot, QTimer
 SENDER_ID_MAIN = "[SauronEye-Main]"
 SENDER_ID_INIT = "[SauronEye-Init]"
 SENDER_ID_ANALYSIS = "[SauronEye-Analysis]"
-SENDER_ID_USER = "[User]" # Added for user chat messages
-SENDER_ID_CHAT_RESPONSE = "[LLM-Chat]" # Added for LLM responses to chat
+SENDER_ID_USER = "[User]" 
+SENDER_ID_CHAT_RESPONSE = "[LLM-Chat]"
 
 # --- Main Application Class (using PyQt) ---
 class MainApplication(QMainWindow):
@@ -379,7 +379,6 @@ class MainApplication(QMainWindow):
             return None
 
     def analyze_image(self, img):
-        # This function remains unchanged, handling image analysis
         if not self.ollama_model or not self.ollama_server:
             msg = "Ollama model or server not configured."
             self.update_status(msg)
