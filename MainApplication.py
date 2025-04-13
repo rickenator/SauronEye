@@ -11,13 +11,17 @@ import Xlib.display
 import paho.mqtt.client as mqtt
 from PIL import Image
 import threading
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QStatusBar
+# Import necessary widgets and layouts
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QStatusBar,
+                             QPushButton, QWidget, QVBoxLayout, QHBoxLayout)
 from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot, QTimer
 
 # --- Constants ---
 SENDER_ID_MAIN = "[SauronEye-Main]"
 SENDER_ID_INIT = "[SauronEye-Init]"
 SENDER_ID_ANALYSIS = "[SauronEye-Analysis]"
+SENDER_ID_USER = "[User]" # Added for user chat messages
+SENDER_ID_CHAT_RESPONSE = "[LLM-Chat]" # Added for LLM responses to chat
 
 # --- Main Application Class (using PyQt) ---
 class MainApplication(QMainWindow):
@@ -34,17 +38,35 @@ class MainApplication(QMainWindow):
         self.config_path = "config.ini"
         self.load_settings()
         self._update_attributes_from_settings()
-
-        # --- Add flag to track initial check ---
         self.initial_check_done = False
 
         # --- Setup PyQt UI ---
-        self.setWindowTitle("SauronEye Output")
-        self.text_edit_analysis = QTextEdit(self)
-        self.text_edit_analysis.setReadOnly(True)
-        self.setCentralWidget(self.text_edit_analysis)
+        self.setWindowTitle("SauronEye Chat") # Changed title
         self.statusBar = QStatusBar(self)
         self.setStatusBar(self.statusBar)
+
+        # --- Create Chat Widgets ---
+        self.chat_display = QTextEdit(self) # Renamed for clarity
+        self.chat_display.setReadOnly(True)
+
+        self.chat_input = QTextEdit(self) # Input area (allows newlines)
+        self.chat_input.setFixedHeight(60) # Set a reasonable initial height
+
+        self.send_button = QPushButton("Send", self)
+        self.send_button.clicked.connect(self.handle_send_button) # Connect button click
+
+        # --- Layout ---
+        central_widget = QWidget()
+        main_layout = QVBoxLayout(central_widget) # Main vertical layout
+
+        input_layout = QHBoxLayout() # Horizontal layout for input + button
+        input_layout.addWidget(self.chat_input)
+        input_layout.addWidget(self.send_button)
+
+        main_layout.addWidget(self.chat_display) # Add chat display area
+        main_layout.addLayout(input_layout) # Add input layout below display
+
+        self.setCentralWidget(central_widget) # Set the layout
 
         # --- Connect signals to UI update slots ---
         self.status_update_signal.connect(self.update_status_bar)
@@ -65,10 +87,59 @@ class MainApplication(QMainWindow):
 
     @pyqtSlot(str)
     def append_output_text(self, text):
-        if hasattr(self, 'text_edit_analysis'):
-            self.text_edit_analysis.append(text)
+        """Appends text to the chat display area."""
+        if hasattr(self, 'chat_display'):
+            self.chat_display.append(text)
 
-    # ... (_update_attributes_from_settings) ...
+    # --- Handle Send Button Click ---
+    @pyqtSlot()
+    def handle_send_button(self):
+        """Handles the Send button click event."""
+        user_message = self.chat_input.toPlainText().strip()
+        if not user_message:
+            return # Don't send empty messages
+
+        # Clear the input field
+        self.chat_input.clear()
+
+        # Publish user message to MQTT (so it appears in the chat display)
+        self.publish_output_message(SENDER_ID_USER, user_message)
+
+        # Send the message to Ollama in a background thread
+        threading.Thread(target=self.send_chat_message_to_ollama,
+                         args=(user_message,), daemon=True).start()
+
+    # --- Method to send chat message to Ollama ---
+    def send_chat_message_to_ollama(self, user_message):
+        """Sends a text-only chat message to Ollama."""
+        if not self.ollama_model or not self.ollama_server:
+            self.update_status("Ollama not configured for chat.")
+            self.publish_output_message(SENDER_ID_CHAT_RESPONSE, "Error: Ollama not configured.")
+            return
+
+        self.update_status(f"Sending chat message to Ollama ({self.ollama_model})...")
+
+        try:
+            client = ollama.Client(host=self.ollama_server)
+            # Note: This is a stateless chat for now. For context, you'd need to manage message history.
+            messages = [{'role': 'user', 'content': user_message}]
+
+            response = client.chat(model=self.ollama_model, messages=messages)
+            response_text = response['message']['content'].strip()
+
+            self.update_status("Ollama chat response received.")
+            # Publish the LLM's response to MQTT output topic
+            self.publish_output_message(SENDER_ID_CHAT_RESPONSE, response_text)
+
+        except Exception as e:
+            error_message = f"Error during Ollama chat: {e}"
+            self.update_status(error_message)
+            print(error_message)
+            # Publish error message to MQTT output topic
+            self.publish_output_message(SENDER_ID_CHAT_RESPONSE, f"Error processing chat: {e}")
+
+
+    # ... (_update_attributes_from_settings, setup_mqtt, mqtt_loop_check, on_connect, on_disconnect, on_mqtt_message) ...
     def _update_attributes_from_settings(self):
         self.mqtt_broker = self.settings.get('mqtt_broker', "localhost")
         self.mqtt_port = int(self.settings.get('mqtt_port', 1883))
@@ -80,7 +151,6 @@ class MainApplication(QMainWindow):
         print("Attributes updated from settings.")
 
     def setup_mqtt(self):
-        """Sets up and connects the MQTT client."""
         if self.mqtt_client:
              try:
                  self.mqtt_timer.stop()
@@ -124,11 +194,10 @@ class MainApplication(QMainWindow):
             client.subscribe(self.mqtt_keypad_topic)
             client.subscribe(self.mqtt_output_topic)
 
-            # --- Trigger initial check only on the first successful connect ---
             if not self.initial_check_done:
                 print("First connection: Triggering initial Ollama check.")
                 threading.Thread(target=self.send_initial_ollama_message, daemon=True).start()
-                self.initial_check_done = True # Set flag so it doesn't run again
+                self.initial_check_done = True
             else:
                 print("Reconnected to MQTT. Skipping initial Ollama check.")
 
@@ -155,8 +224,10 @@ class MainApplication(QMainWindow):
             else:
                 print(f"Unhandled command '{payload}' on topic {topic}")
         elif topic == self.mqtt_output_topic:
+            # Append any message from the output topic to the chat display
             self.output_message_signal.emit(payload)
 
+    # ... (publish_output_message, send_initial_ollama_message, load_settings, save_settings, show_settings_window, start_application) ...
     def publish_output_message(self, sender_id, message):
         if self.is_mqtt_connected:
             full_message = f"{sender_id}: {message}"
@@ -172,7 +243,6 @@ class MainApplication(QMainWindow):
             self.update_status("Cannot publish message, MQTT not connected.")
 
     def send_initial_ollama_message(self):
-        """Sends a simple text message to Ollama to verify connection."""
         if not self.ollama_model or not self.ollama_server:
             self.update_status("Ollama not configured, skipping initial check.")
             return
@@ -193,7 +263,6 @@ class MainApplication(QMainWindow):
             print(error_message)
             self.publish_output_message(SENDER_ID_INIT, f"Error connecting: {e}")
 
-    # ... (load_settings, save_settings, show_settings_window) ...
     def load_settings(self):
         if os.path.exists(self.config_path):
             self.config.read(self.config_path)
@@ -242,11 +311,9 @@ class MainApplication(QMainWindow):
             self.settings_window.show()
 
     def start_application(self):
-        """Callback function after settings are saved."""
         self.update_status("Application settings applied.")
         print("Start application callback executed.")
-        self.show() # Show the main application window
-        # --- REMOVED initial message call from here ---
+        self.show()
 
     # ... (capture_and_process, get_active_window_geometry, capture_focused_window, analyze_image, save_captured_image_async, update_status, closeEvent) ...
     def capture_and_process(self):
@@ -259,10 +326,11 @@ class MainApplication(QMainWindow):
         self.save_captured_image_async(image.copy())
 
         self.update_status("Analyzing image...")
-        analysis_result = self.analyze_image(image)
+        analysis_result = self.analyze_image(image) # This still uses the multimodal model
 
         if analysis_result:
             self.update_status("Analysis complete. Publishing...")
+            # Publish analysis result with its specific sender ID
             self.publish_output_message(SENDER_ID_ANALYSIS, analysis_result)
         else:
             print("Analysis did not return a result.")
@@ -311,6 +379,7 @@ class MainApplication(QMainWindow):
             return None
 
     def analyze_image(self, img):
+        # This function remains unchanged, handling image analysis
         if not self.ollama_model or not self.ollama_server:
             msg = "Ollama model or server not configured."
             self.update_status(msg)
