@@ -5,8 +5,8 @@ This Python-based application captures the currently focused window on your desk
 ## Prerequisites
 *   **Linux Desktop:** It uses Qt, but I only targeted and tested on Ubuntu 24.04 with Gnome Desktop.
 *   **Python 3.x:**  Ensure you have Python 3 installed.
-*   **Mosquitto MQTT Broker:** A running Mosquitto MQTT broker on your network.
-*   **Ollama Server (Optional):** If using a local LLM, ensure your Ollama server is running and accessible.
+*   **MQTT Broker:** A Mosquitto MQTT or similar broker running on your network.
+*   **Ollama Server:** Uses a local LLM, ensure your Ollama server is running and accessible. Cloud AI TBD.
 *   **Dependencies:** Install the required Python libraries:
 
     ```bash
