@@ -3,10 +3,10 @@
 This Python-based application captures the currently focused window on your desktop, sends its contents to an LLM (Local Ollama or Cloud API), and displays the LLM's response in a dedicated output window. It is an IoT AI controlled via shorcuts on the numerical keypad, or by another IoT device, making it unobtrusive and efficient to use.
 
 ## Prerequisites
-
+*   **Linux Desktop:** It uses Qt, but I only targeted and tested on Ubuntu 24.04 with Gnome Desktop.
 *   **Python 3.x:**  Ensure you have Python 3 installed.
-*   **Mosquitto MQTT Broker:** A running Mosquitto MQTT broker on your network.
-*   **Ollama Server (Optional):** If using a local LLM, ensure your Ollama server is running and accessible.
+*   **MQTT Broker:** A Mosquitto MQTT or similar broker running on your network.
+*   **Ollama Server:** Uses a local LLM, ensure your Ollama server is running and accessible. Cloud AI TBD.
 *   **Dependencies:** Install the required Python libraries:
 
     ```bash
@@ -114,3 +114,5 @@ SauronEye acts like an AI assistant "looking over your shoulder". It's designed 
 7.  **Other Keypad Commands (Partially Implemented):**
     *   Other numeric keypad keys (`4`, `6`, `8`, `2`, `Insert`, `Delete`, etc.) send corresponding commands ("scroll\_left", "copy", etc.) via MQTT.
     *   These are intended to control the dedicated output window (scrolling, copying text) without affecting your main focused application. The handling of these commands in `MainApplication.py` needs further implementation.
+8.  **TODO:**
+    *   Chat/Text input to AI response window.
