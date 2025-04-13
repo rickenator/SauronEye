@@ -3,7 +3,7 @@
 This Python-based application captures the currently focused window on your desktop, sends its contents to an LLM (Local Ollama or Cloud API), and displays the LLM's response in a dedicated output window. It is an IoT AI controlled via shorcuts on the numerical keypad, or by another IoT device, making it unobtrusive and efficient to use.
 
 ## Prerequisites
-*   **Linux Desktop** It uses Qt, but I only targeted and tested on Ubuntu 24.04 with Gnome Desktop.
+*   **Linux Desktop:** It uses Qt, but I only targeted and tested on Ubuntu 24.04 with Gnome Desktop.
 *   **Python 3.x:**  Ensure you have Python 3 installed.
 *   **Mosquitto MQTT Broker:** A running Mosquitto MQTT broker on your network.
 *   **Ollama Server (Optional):** If using a local LLM, ensure your Ollama server is running and accessible.
