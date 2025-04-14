@@ -19,6 +19,7 @@ Thumbs.db          # Windows
 temp/
 tmp/
 *.tmp
+captures/
 
 # Sensitive Data
 secrets/
@@ -39,3 +40,5 @@ env/
 *.egg-info/
 dist/
 build/
+.snapshots/
+.vscode/

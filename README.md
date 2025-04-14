@@ -12,7 +12,54 @@ This Python-based application captures the currently focused window on your desk
     ```bash
     pip install -r requirements.txt
     ```
+## Setup
 
+### Dependencies
+
+This application requires Python 3.x and several system libraries for screen capture on Wayland and GUI elements.
+
+1.  **Python:** Ensure Python 3.8+ is installed.
+2.  **Virtual Environment (Recommended):**
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+3.  **Python Packages:**
+    ```bash
+    pip install -r requirements.txt
+    # Or manually: pip install paho-mqtt ollama Pillow pydbus PyQt5
+    ```
+4.  **System Libraries (Ubuntu/Debian Example):**
+    These are crucial for Wayland screen capture (ScreenCast portal, PipeWire, GStreamer) and Python bindings.
+    ```bash
+    sudo apt update
+    sudo apt install \
+        python3-gi \
+        gir1.2-gstreamer-1.0 \
+        gir1.2-gst-plugins-base-1.0 \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good \
+        gstreamer1.0-pipewire \
+        pipewire # Ensure PipeWire itself is installed
+    # Optional, but helpful for development:
+    sudo apt install python3-gst-1.0
+    ```
+    *(Note: Package names may differ slightly on other distributions.)*
+
+### Configuration
+
+1.  Copy `config.ini.example` to `config.ini`.
+2.  Edit `config.ini` to set your MQTT broker details, Ollama server URL, desired Ollama model (e.g., `llava:latest`), and default analysis prompt.
+
+## Running
+
+1.  **Activate Virtual Environment:** `source .venv/bin/activate`
+2.  **Run on Wayland:** It's essential to run the application telling Qt to use Wayland natively for portal screen capture to work correctly:
+    ```bash
+    QT_QPA_PLATFORM=wayland python MainApplication.py
+    ```
+3.  **Configure Settings:** The settings window will appear first. Confirm or adjust settings and click "Start".
+4.  **Screen Capture:** Press the **Numeric Keypad Enter** key. A system dialog will appear asking you to select a window or screen to share. Click the desired window. A single frame will be captured and sent for analysis.
 ## Installation
 
 1.  **Clone the repository:**
